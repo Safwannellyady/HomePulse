@@ -48,16 +48,33 @@ export const AuthProvider = ({ children }) => {
     const loginWithGoogle = async () => {
         try {
             await signInWithPopup(auth, googleProvider);
-            return true;
+            return { success: true };
         } catch (error) {
             console.error("Google Sign In Error", error);
-            return false;
+            return { success: false, error: error.message };
         }
+    };
+
+    const loginGuest = () => {
+        const guestUser = {
+            uid: 'guest-' + Date.now(),
+            name: 'Guest User',
+            email: 'guest@homepulse.app',
+            photoURL: null,
+            isPremium: false,
+            walletBalance: 1000,
+            provider: 'BESCOM'
+        };
+        setUser(guestUser);
+        // Persist guest session locally only
+        localStorage.setItem(`homepulse_user_guest`, JSON.stringify(guestUser));
+        return true;
     };
 
     const logout = async () => {
         await signOut(auth);
         setUser(null);
+        localStorage.removeItem(`homepulse_user_guest`);
     };
 
     // Update Wallet in Firestore
