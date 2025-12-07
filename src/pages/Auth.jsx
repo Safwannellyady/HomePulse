@@ -1,30 +1,19 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Zap, Mail, Lock, User, ArrowRight } from 'lucide-react';
+import { Zap, ArrowRight, Chrome } from 'lucide-react';
 
 const Auth = () => {
-    const [isLogin, setIsLogin] = useState(true);
-    const { login, signup } = useAuth();
+    const { loginWithGoogle } = useAuth();
     const navigate = useNavigate();
+    const [error, setError] = useState('');
 
-    const [form, setForm] = useState({
-        name: '',
-        email: '',
-        password: '',
-        confirmPassword: ''
-    });
-
-    const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        if (isLogin) {
-            login(form.email, form.password);
+    const handleGoogleLogin = async () => {
+        const success = await loginWithGoogle();
+        if (success) {
             navigate('/dashboard');
         } else {
-            signup({ name: form.name, email: form.email });
-            navigate('/onboarding');
+            setError('Failed to sign in via Google');
         }
     };
 
@@ -39,83 +28,30 @@ const Auth = () => {
                     <div className="w-16 h-16 bg-gradient-to-br from-neon-blue to-neon-purple rounded-2xl flex items-center justify-center shadow-lg shadow-neon-blue/20 mx-auto mb-4">
                         <Zap className="text-white w-8 h-8 fill-current" />
                     </div>
-                    <h2 className="text-3xl font-bold text-white mb-2">{isLogin ? 'Welcome Back' : 'Create Account'}</h2>
-                    <p className="text-gray-400">{isLogin ? 'Control your energy, anywhere.' : 'Join the smart energy revolution.'}</p>
+                    <h2 className="text-3xl font-bold text-white mb-2">Welcome to HomePulse</h2>
+                    <p className="text-gray-400">Smart Energy Management, Simplified.</p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    {!isLogin && (
-                        <div className="relative group">
-                            <User className="absolute left-4 top-3.5 w-5 h-5 text-gray-500 group-focus-within:text-neon-blue transition-colors" />
-                            <input
-                                type="text"
-                                name="name"
-                                placeholder="Full Name"
-                                value={form.name}
-                                onChange={handleChange}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white focus:border-neon-blue focus:outline-none transition-colors"
-                                required
-                            />
-                        </div>
-                    )}
-
-                    <div className="relative group">
-                        <Mail className="absolute left-4 top-3.5 w-5 h-5 text-gray-500 group-focus-within:text-neon-blue transition-colors" />
-                        <input
-                            type="email"
-                            name="email"
-                            placeholder="Email Address"
-                            value={form.email}
-                            onChange={handleChange}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white focus:border-neon-blue focus:outline-none transition-colors"
-                            required
-                        />
-                    </div>
-
-                    <div className="relative group">
-                        <Lock className="absolute left-4 top-3.5 w-5 h-5 text-gray-500 group-focus-within:text-neon-blue transition-colors" />
-                        <input
-                            type="password"
-                            name="password"
-                            placeholder="Password"
-                            value={form.password}
-                            onChange={handleChange}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white focus:border-neon-blue focus:outline-none transition-colors"
-                            required
-                        />
-                    </div>
-
-                    {!isLogin && (
-                        <div className="relative group">
-                            <Lock className="absolute left-4 top-3.5 w-5 h-5 text-gray-500 group-focus-within:text-neon-blue transition-colors" />
-                            <input
-                                type="password"
-                                name="confirmPassword"
-                                placeholder="Confirm Password"
-                                value={form.confirmPassword}
-                                onChange={handleChange}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white focus:border-neon-blue focus:outline-none transition-colors"
-                                required
-                            />
-                        </div>
-                    )}
-
+                <div className="space-y-4">
                     <button
-                        type="submit"
-                        className="w-full py-3.5 rounded-xl bg-gradient-to-r from-neon-blue to-cyan-500 text-black font-bold hover:shadow-[0_0_20px_rgba(0,243,255,0.4)] transition-all flex items-center justify-center gap-2 group"
+                        onClick={handleGoogleLogin}
+                        className="w-full py-3.5 rounded-xl bg-white text-black font-bold hover:shadow-[0_0_20px_rgba(255,255,255,0.4)] transition-all flex items-center justify-center gap-3 group"
                     >
-                        {isLogin ? 'Sign In' : 'Get Started'}
-                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                        {/* Chrome icon as proxy for Google G logo */}
+                        <Chrome className="w-5 h-5 text-blue-500" />
+                        Sign in with Google
+                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform ml-auto text-gray-400" />
                     </button>
-                </form>
 
-                <div className="mt-6 text-center">
-                    <button
-                        onClick={() => setIsLogin(!isLogin)}
-                        className="text-sm text-gray-400 hover:text-white transition-colors"
-                    >
-                        {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Sign In"}
-                    </button>
+                    {error && (
+                        <p className="text-red-400 text-sm text-center mt-2">{error}</p>
+                    )}
+                </div>
+
+                <div className="mt-8 pt-6 border-t border-white/10 text-center">
+                    <p className="text-xs text-gray-500">
+                        By continuing, you agree to our Terms of Service and Privacy Policy.
+                    </p>
                 </div>
             </div>
         </div>

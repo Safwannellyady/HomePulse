@@ -1,73 +1,106 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { auth, googleProvider } from '../firebase';
+import { signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
+import { getUserProfile, saveUserProfile } from '../services/db';
 
 const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null); // { name, email, isPremium, provider, meterId, walletBalance }
+    const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Check local storage for persisted session
-        const storedUser = localStorage.getItem('homepulse_user');
-        if (storedUser) {
-            setUser(JSON.parse(storedUser));
-        }
-        setLoading(false);
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+            if (firebaseUser) {
+                // Fetch Profile from Firestore
+                let profile = await getUserProfile(firebaseUser.uid);
+
+                if (!profile) {
+                    // New User: Create default profile
+                    profile = {
+                        isPremium: false,
+                        provider: null,
+                        meterId: null,
+                        walletBalance: 0,
+                        createdAt: new Date().toISOString()
+                    };
+                    await saveUserProfile(firebaseUser.uid, profile);
+                }
+
+                setUser({
+                    uid: firebaseUser.uid,
+                    name: firebaseUser.displayName,
+                    email: firebaseUser.email,
+                    photoURL: firebaseUser.photoURL,
+                    ...profile
+                });
+            } else {
+                setUser(null);
+            }
+            setLoading(false);
+        });
+
+        return () => unsubscribe();
     }, []);
 
-    const login = (email, password) => {
-        // Mock Login
-        const mockUser = {
-            name: 'Safwan',
-            email,
-            isPremium: true,
-            provider: 'MESCOM',
-            meterId: 'KA-5692-BLR',
-            walletBalance: 1250.50
-        };
-        setUser(mockUser);
-        localStorage.setItem('homepulse_user', JSON.stringify(mockUser));
-        return true;
+    const loginWithGoogle = async () => {
+        try {
+            await signInWithPopup(auth, googleProvider);
+            return true;
+        } catch (error) {
+            console.error("Google Sign In Error", error);
+            return false;
+        }
     };
 
-    const signup = (userData) => {
-        // Mock Signup - initiates onboarding flow normally, but here we just set user
-        const newUser = {
-            ...userData,
-            isPremium: false,
-            walletBalance: 0
-        };
-        setUser(newUser);
-        localStorage.setItem('homepulse_user', JSON.stringify(newUser));
-    };
-
-    const logout = () => {
+    const logout = async () => {
+        await signOut(auth);
         setUser(null);
-        localStorage.removeItem('homepulse_user');
     };
 
-    const updateWallet = (amount) => {
-        const updatedUser = { ...user, walletBalance: user.walletBalance + amount };
+    // Update Wallet in Firestore
+    const updateWallet = async (amount) => {
+        if (!user) return;
+        const newBalance = (user.walletBalance || 0) + amount;
+
+        // Optimistic UI Update
+        const updatedUser = { ...user, walletBalance: newBalance };
         setUser(updatedUser);
-        localStorage.setItem('homepulse_user', JSON.stringify(updatedUser));
+
+        // Save to Cloud
+        await saveUserProfile(user.uid, { walletBalance: newBalance });
     };
 
-    const upgradeSubscription = () => {
+    // Upgrade Subscription in Firestore
+    const upgradeSubscription = async () => {
+        if (!user) return;
+
         const updatedUser = { ...user, isPremium: true };
         setUser(updatedUser);
-        localStorage.setItem('homepulse_user', JSON.stringify(updatedUser));
+
+        await saveUserProfile(user.uid, { isPremium: true });
+    };
+
+    // Save Onboarding Data in Firestore
+    const updateUserProfile = async (data) => {
+        if (!user) return;
+
+        const updatedUser = { ...user, ...data };
+        setUser(updatedUser);
+
+        await saveUserProfile(user.uid, data);
     };
 
     const value = {
         user,
         loading,
-        login,
-        signup,
+        loginWithGoogle,
         logout,
         updateWallet,
-        upgradeSubscription
+        upgradeSubscription,
+        updateUserProfile
     };
 
     return (

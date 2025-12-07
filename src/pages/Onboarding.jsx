@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { CheckCircle, Zap, Building2, Hash, Power } from 'lucide-react';
+import { fetchBill } from '../services/db';
+import { CheckCircle, Zap, Building2, Hash, AlertCircle } from 'lucide-react';
 
 const steps = [
     { title: 'Provider', desc: 'Select Utility' },
@@ -14,15 +15,36 @@ const Onboarding = () => {
     const [provider, setProvider] = useState('');
     const [meterId, setMeterId] = useState('');
     const [isVerifying, setIsVerifying] = useState(false);
+    const [error, setError] = useState('');
+    const { updateUserProfile } = useAuth();
     const navigate = useNavigate();
 
-    const handleNext = () => {
+    const handleNext = async () => {
+        setError('');
+
         if (currentStep === 2) {
             setIsVerifying(true);
-            setTimeout(() => {
+            try {
+                // Simulate fetching bill from Utility API (via our DB service)
+                const bill = await fetchBill(provider, meterId);
+
+                if (bill) {
+                    // Success: Save Meter Details to User Profile
+                    await updateUserProfile({
+                        provider,
+                        meterId,
+                        lastBill: bill
+                    });
+                    setCurrentStep(3);
+                } else {
+                    setError('Invalid Consumer ID. Please check your bill.');
+                }
+            } catch (err) {
+                console.error(err);
+                setError('Connection failed. Try again.');
+            } finally {
                 setIsVerifying(false);
-                setCurrentStep(3);
-            }, 2000);
+            }
         } else if (currentStep === 3) {
             navigate('/dashboard');
         } else {
@@ -39,7 +61,7 @@ const Onboarding = () => {
                 {steps.map((step, i) => (
                     <div key={i} className="flex items-center gap-2">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border transition-colors ${currentStep > i + 1 ? 'bg-green-500 border-green-500 text-black' :
-                                currentStep === i + 1 ? 'bg-neon-blue border-neon-blue text-black' : 'border-gray-600 text-gray-600'
+                            currentStep === i + 1 ? 'bg-neon-blue border-neon-blue text-black' : 'border-gray-600 text-gray-600'
                             }`}>
                             {currentStep > i + 1 ? <CheckCircle className="w-5 h-5" /> : i + 1}
                         </div>
@@ -63,8 +85,8 @@ const Onboarding = () => {
                                     key={p}
                                     onClick={() => setProvider(p)}
                                     className={`p-6 rounded-xl border flex flex-col items-center gap-3 transition-all ${provider === p
-                                            ? 'bg-neon-blue/20 border-neon-blue text-white shadow-[0_0_15px_rgba(0,243,255,0.25)]'
-                                            : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'
+                                        ? 'bg-neon-blue/20 border-neon-blue text-white shadow-[0_0_15px_rgba(0,243,255,0.25)]'
+                                        : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'
                                         }`}
                                 >
                                     <Building2 className="w-8 h-8" />
@@ -95,6 +117,13 @@ const Onboarding = () => {
                             </div>
                         </div>
 
+                        {error && (
+                            <div className="flex items-center gap-2 text-red-400 bg-red-500/10 p-3 rounded-xl mb-4 text-sm">
+                                <AlertCircle className="w-4 h-4" />
+                                {error}
+                            </div>
+                        )}
+
                         {isVerifying && (
                             <div className="flex items-center gap-3 text-neon-blue justify-center py-4 bg-neon-blue/10 rounded-xl">
                                 <span className="animate-spin">⌛</span> Verifying connection with {provider}...
@@ -117,7 +146,7 @@ const Onboarding = () => {
                                 <span className="text-white">{provider}</span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-gray-500">Meter ID</span>
+                                <span className="text-gray-500">Consumer ID</span>
                                 <span className="text-white font-mono">{meterId}</span>
                             </div>
                         </div>
@@ -127,7 +156,7 @@ const Onboarding = () => {
                 <div className="mt-8 flex justify-end">
                     <button
                         onClick={handleNext}
-                        disabled={currentStep === 1 && !provider || currentStep === 2 && !meterId}
+                        disabled={(currentStep === 1 && !provider) || (currentStep === 2 && !meterId) || isVerifying}
                         className="px-8 py-3 bg-neon-blue text-black font-bold rounded-xl hover:shadow-[0_0_20px_#00f3ff] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                     >
                         {currentStep === 3 ? 'Go to Dashboard' : 'Continue'}
