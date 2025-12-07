@@ -15,29 +15,42 @@ export const AuthProvider = ({ children }) => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             if (firebaseUser) {
                 // Fetch Profile from Firestore
-                let profile = await getUserProfile(firebaseUser.uid);
-
-                if (!profile) {
-                    // New User: Create default profile
-                    profile = {
-                        isPremium: false,
-                        provider: null,
-                        meterId: null,
-                        walletBalance: 0,
-                        createdAt: new Date().toISOString()
-                    };
-                    await saveUserProfile(firebaseUser.uid, profile);
+                try {
+                    let profile = await getUserProfile(firebaseUser.uid);
+                    if (!profile) {
+                        profile = {
+                            isPremium: false,
+                            provider: null,
+                            meterId: null,
+                            walletBalance: 0,
+                            createdAt: new Date().toISOString()
+                        };
+                        await saveUserProfile(firebaseUser.uid, profile);
+                    }
+                    setUser({
+                        uid: firebaseUser.uid,
+                        name: firebaseUser.displayName,
+                        email: firebaseUser.email,
+                        photoURL: firebaseUser.photoURL,
+                        ...profile
+                    });
+                } catch (e) {
+                    console.error("Error fetching user profile", e);
                 }
-
-                setUser({
-                    uid: firebaseUser.uid,
-                    name: firebaseUser.displayName,
-                    email: firebaseUser.email,
-                    photoURL: firebaseUser.photoURL,
-                    ...profile
-                });
             } else {
-                setUser(null);
+                // Restore Guest Session if exists
+                const guestSession = localStorage.getItem('homepulse_user_guest');
+                if (guestSession) {
+                    try {
+                        setUser(JSON.parse(guestSession));
+                    } catch (e) {
+                        console.error("Invalid guest session", e);
+                        localStorage.removeItem('homepulse_user_guest');
+                        setUser(null);
+                    }
+                } else {
+                    setUser(null);
+                }
             }
             setLoading(false);
         });
@@ -51,7 +64,13 @@ export const AuthProvider = ({ children }) => {
             return { success: true };
         } catch (error) {
             console.error("Google Sign In Error", error);
-            return { success: false, error: error.message };
+            let message = error.message;
+            if (error.code === 'auth/popup-blocked') {
+                message = "Pop-up blocked by browser. Please allow pop-ups for this site.";
+            } else if (error.code === 'auth/popup-closed-by-user') {
+                message = "Sign-in cancelled.";
+            }
+            return { success: false, error: message };
         }
     };
 
@@ -114,6 +133,7 @@ export const AuthProvider = ({ children }) => {
         user,
         loading,
         loginWithGoogle,
+        loginGuest,
         logout,
         updateWallet,
         upgradeSubscription,
