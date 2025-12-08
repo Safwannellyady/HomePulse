@@ -94,7 +94,9 @@ const Subscription = () => {
                             <Check className="w-5 h-5" /> Active
                         </button>
                     ) : (
-                        <form id="razorpay-form"></form>
+                        <div className="w-full rounded-xl overflow-hidden min-h-[48px] flex items-center justify-center">
+                            <form id="razorpay-form" className="w-full"></form>
+                        </div>
                     )}
                 </div>
             </div>
