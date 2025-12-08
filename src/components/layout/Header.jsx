@@ -6,7 +6,7 @@ const Header = () => {
     const { showToast } = useToast();
 
     return (
-        <header className="h-20 bg-black/20 backdrop-blur-md border-b border-white/5 sticky top-0 z-40 px-6 flex items-center justify-between">
+        <header className="h-20 bg-black/20 backdrop-blur-md border-b border-white/5 sticky top-0 z-40 px-4 md:px-6 flex items-center justify-between">
             {/* Title / Breadcrumb */}
             <div>
                 <h1 className="text-2xl font-bold text-white">Dashboard</h1>

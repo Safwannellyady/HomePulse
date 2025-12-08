@@ -11,7 +11,7 @@ const DashboardLayout = ({ children }) => {
             <div className="pl-20 lg:pl-64 flex flex-col min-h-screen">
                 <Header />
 
-                <main className="flex-1 p-6 lg:p-10 relative">
+                <main className="flex-1 p-4 md:p-6 lg:p-10 relative">
                     {/* Background Atmosphere */}
                     <div className="fixed top-0 left-0 w-full h-full pointer-events-none -z-10 overflow-hidden">
                         <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-neon-purple/10 rounded-full blur-[120px]"></div>
