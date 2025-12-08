@@ -5,10 +5,20 @@ import { Check, Star, Zap, Shield, Smartphone } from 'lucide-react';
 const Subscription = () => {
     const { user, upgradeSubscription } = useAuth();
 
-    const handleSubscribe = () => {
-        // Redirect to Razorpay Payment Page for Subscription
-        window.open("https://rzp.io/rzp/QiWuGAl9", "_blank");
-    };
+    React.useEffect(() => {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.razorpay.com/static/embed_btn/bundle.js';
+        script.defer = true;
+        script.id = 'razorpay-embed-btn-js';
+        document.body.appendChild(script);
+
+        return () => {
+            const existingScript = document.getElementById('razorpay-embed-btn-js');
+            if (existingScript) {
+                document.body.removeChild(existingScript);
+            }
+        };
+    }, []);
 
     return (
         <div className="animate-fade-in-up">
@@ -80,12 +90,8 @@ const Subscription = () => {
                             <Check className="w-5 h-5" /> Active
                         </button>
                     ) : (
-                        <button
-                            onClick={handleSubscribe}
-                            className="w-full py-3 rounded-xl bg-neon-blue text-black font-bold hover:shadow-[0_0_20px_#00f3ff] transition-all"
-                        >
-                            Upgrade Now
-                        </button>
+                        <div className="razorpay-embed-btn" data-url="https://pages.razorpay.com/pl_RpCDxlyzXnpg66/view" data-text="Pay Now" data-color="#528FF0" data-size="large">
+                        </div>
                     )}
                 </div>
             </div>
