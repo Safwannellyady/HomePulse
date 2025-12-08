@@ -8,7 +8,9 @@ const Auth = () => {
     const { loginWithGoogle, loginGuest } = useAuth();
     const navigate = useNavigate();
     const [error, setError] = useState('');
+    const [isGuestLoading, setIsGuestLoading] = useState(false);
     const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+    const [rememberMe, setRememberMe] = useState(false);
 
     const handleGoogleLogin = async () => {
         setError('');
