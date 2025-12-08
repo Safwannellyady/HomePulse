@@ -100,8 +100,8 @@ const BudgetAndBills = () => {
             </div>
 
             {/* Breakdown / Pie Chart (Optional/Extra) */}
-            <div className="bg-glass-surface rounded-2xl p-6 border border-white/10 h-72 flex items-center justify-between">
-                <div className="w-1/2 h-full">
+            <div className="bg-glass-surface rounded-2xl p-6 border border-white/10 min-h-[18rem] flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="w-full md:w-1/2 h-64 md:h-full">
                     <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                             <Pie
@@ -122,7 +122,7 @@ const BudgetAndBills = () => {
                         </PieChart>
                     </ResponsiveContainer>
                 </div>
-                <div className="w-1/2 pl-6 border-l border-white/5 space-y-4">
+                <div className="w-full md:w-1/2 md:pl-6 md:border-l border-white/5 space-y-4">
                     <h4 className="text-white font-medium mb-4">Budget Analysis</h4>
                     <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full" style={{ background: COLORS[0] }}></div>
