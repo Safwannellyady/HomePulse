@@ -167,6 +167,12 @@ export const AuthProvider = ({ children }) => {
         const updatedUser = { ...user, ...data };
         setUser(updatedUser);
 
+        // Guest Handling: Local Persistence Only
+        if (user.uid.startsWith('guest-')) {
+            localStorage.setItem('homepulse_user_guest', JSON.stringify(updatedUser));
+            return;
+        }
+
         await saveUserProfile(user.uid, data);
     };
 
