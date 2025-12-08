@@ -7,15 +7,19 @@ const Subscription = () => {
 
     React.useEffect(() => {
         const script = document.createElement('script');
-        script.src = 'https://cdn.razorpay.com/static/embed_btn/bundle.js';
-        script.defer = true;
-        script.id = 'razorpay-embed-btn-js';
-        document.body.appendChild(script);
+        script.src = 'https://checkout.razorpay.com/v1/payment-button.js';
+        script.dataset.payment_button_id = 'pl_RpCWbSA65mppqj';
+        script.async = true;
+
+        const form = document.getElementById('razorpay-form');
+        if (form) {
+            form.appendChild(script);
+        }
 
         return () => {
-            const existingScript = document.getElementById('razorpay-embed-btn-js');
-            if (existingScript) {
-                document.body.removeChild(existingScript);
+            // Cleanup if needed (though Razorpay scripts are tricky to cleanup perfectly)
+            if (form && form.contains(script)) {
+                form.removeChild(script);
             }
         };
     }, []);
@@ -90,8 +94,7 @@ const Subscription = () => {
                             <Check className="w-5 h-5" /> Active
                         </button>
                     ) : (
-                        <div className="razorpay-embed-btn" data-url="https://pages.razorpay.com/pl_RpCDxlyzXnpg66/view" data-text="Pay Now" data-color="#528FF0" data-size="large">
-                        </div>
+                        <form id="razorpay-form"></form>
                     )}
                 </div>
             </div>
