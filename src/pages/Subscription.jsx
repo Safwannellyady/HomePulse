@@ -6,12 +6,8 @@ const Subscription = () => {
     const { user, upgradeSubscription } = useAuth();
 
     const handleSubscribe = () => {
-        if (user.walletBalance >= 199) {
-            upgradeSubscription();
-            alert('Welcome to Premium! 🎉');
-        } else {
-            alert('Insufficient balance! Please top up your wallet.');
-        }
+        // Redirect to Razorpay Payment Page for Subscription
+        window.open("https://rzp.io/rzp/QiWuGAl9", "_blank");
     };
 
     return (

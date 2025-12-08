@@ -10,10 +10,7 @@ const WalletPage = () => {
 
     const handleTopUp = (e) => {
         e.preventDefault();
-        // Redirect to Razorpay Payment Page
-        // Note: We cannot automatically pass the amount to a standard Payment Page via URL reliably without specific configuration.
-        // User will enter amount on the Razorpay page.
-        window.open("https://rzp.io/rzp/QiWuGAl9", "_blank");
+        updateWallet(parseFloat(amount));
         setIsTopUpOpen(false);
     };
 
