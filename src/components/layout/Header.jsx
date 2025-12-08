@@ -1,7 +1,10 @@
 import React from 'react';
 import { Bell, Search, User } from 'lucide-react';
+import { useToast } from '../../context/ToastContext';
 
 const Header = () => {
+    const { showToast } = useToast();
+
     return (
         <header className="h-20 bg-black/20 backdrop-blur-md border-b border-white/5 sticky top-0 z-40 px-6 flex items-center justify-between">
             {/* Title / Breadcrumb */}
@@ -23,7 +26,10 @@ const Header = () => {
                 </div>
 
                 {/* Notifications */}
-                <button className="relative p-2 text-gray-400 hover:text-white transition-colors rounded-full hover:bg-white/5">
+                <button
+                    onClick={() => showToast("No new notifications.", "info")}
+                    className="relative p-2 text-gray-400 hover:text-white transition-colors rounded-full hover:bg-white/5"
+                >
                     <Bell className="w-6 h-6" />
                     <span className="absolute top-2 right-2 w-2 h-2 bg-neon-purple rounded-full shadow-[0_0_8px_#bc13fe]"></span>
                 </button>

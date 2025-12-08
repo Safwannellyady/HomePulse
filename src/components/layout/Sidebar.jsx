@@ -2,10 +2,12 @@ import React from 'react';
 import { Home, Zap, Clock, Wallet, BarChart3, Settings, LogOut, Star } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 
 const Sidebar = () => {
     const location = useLocation();
     const { logout } = useAuth();
+    const { showToast } = useToast();
     const isActive = (path) => location.pathname === path;
 
     const menuItems = [
@@ -51,7 +53,10 @@ const Sidebar = () => {
 
             {/* Bottom Actions */}
             <div className="p-4 border-t border-white/5">
-                <button className="flex items-center justify-center lg:justify-start w-full p-3 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all">
+                <button
+                    onClick={() => showToast("Settings are locked in MVP mode.", "info")}
+                    className="flex items-center justify-center lg:justify-start w-full p-3 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all"
+                >
                     <Settings className="w-6 h-6" />
                     <span className="hidden lg:block ml-4 font-medium">Settings</span>
                 </button>
