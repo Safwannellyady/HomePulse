@@ -14,24 +14,48 @@ const tariffData = [
     { hour: '24', rate: 4.5, type: 'Off-Peak' },
 ];
 
-const optimizationTips = [
-    { title: 'Shift Washing Machine', savings: '₹120/mo', desc: 'Running it at 10 PM instead of 7 PM saves 40% on tariff.', urgent: true },
-    { title: 'Geyser Optimization', savings: '₹85/mo', desc: 'Auto-schedule geyser to turn off at 9 AM (Peak start).', urgent: false },
-    { title: 'AC Temperature', savings: '₹300/mo', desc: 'Setting AC to 24°C instead of 20°C reduces load by 15%.', urgent: false },
+import { useAppliances } from '../context/ApplianceContext';
+import { useToast } from '../context/ToastContext';
+
+// ... (tariffData remains same) ...
+
+const dataTips = [
+    { id: 'wash', title: 'Shift Washing Machine', savings: '₹120/mo', desc: 'Running it at 10 PM instead of 7 PM saves 40% on tariff.', urgent: true, type: 'Washing Machine' },
+    { id: 'geyser', title: 'Geyser Optimization', savings: '₹85/mo', desc: 'Auto-schedule geyser to turn off at 9 AM (Peak start).', urgent: false, type: 'Geyser' },
+    { id: 'ac', title: 'AC Temperature', savings: '₹300/mo', desc: 'Setting AC to 24°C instead of 20°C reduces load by 15%.', urgent: false, type: 'AC' },
 ];
 
 const ToDOptimizer = () => {
     const { virtualTime } = useSimulation();
+    const { appliances } = useAppliances();
+    const { showToast } = useToast();
+    const [optimizedIds, setOptimizedIds] = React.useState([]);
+
+    const handleAutomate = (tip) => {
+        if (optimizedIds.includes(tip.id)) return;
+
+        // Check if appliance exists
+        const exists = appliances.some(a => a.type === tip.type || a.name.includes(tip.type));
+
+        if (exists || tip.type === 'Washing Machine') { // Allow washing machine simulation even if not in list
+            setOptimizedIds(prev => [...prev, tip.id]);
+            showToast(`${tip.title} applied! Savings started.`, "success");
+        } else {
+            showToast(`No ${tip.type} found to automate.`, "error");
+        }
+    };
+
     return (
         <div className="animate-fade-in-up space-y-8">
-            {/* Header */}
+            {/* ... Header and Chart remain same ... */}
             <div>
                 <h2 className="text-2xl font-bold text-white mb-2">Time-of-Day Optimization</h2>
                 <p className="text-gray-400">Shift your usage to off-peak hours and save up to 15% on bills.</p>
             </div>
 
             {/* Tariff Chart */}
-            <div className="bg-glass-surface rounded-2xl p-6 border border-white/10">
+            <div className="bg-glass-surface rounded-2xl p-4 md:p-6 border border-white/10">
+                {/* ... Chart Content (Keep exactly as before) ... */}
                 <div className="flex items-center justify-between mb-6">
                     <h3 className="text-lg font-semibold text-white">Tariff Rates (₹/kWh)</h3>
                     <div className="flex gap-4 text-xs">
@@ -68,26 +92,35 @@ const ToDOptimizer = () => {
 
             {/* Suggestions */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {optimizationTips.map((tip, index) => (
-                    <div key={index} className="bg-glass-surface rounded-2xl p-6 border border-white/10 hover:border-neon-blue/30 transition-all group">
-                        <div className="flex justify-between items-start mb-4">
-                            <div className={`p-2 rounded-lg ${tip.urgent ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>
-                                {tip.urgent ? <AlertCircle className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
+                {dataTips.map((tip, index) => {
+                    const isOptimized = optimizedIds.includes(tip.id);
+                    return (
+                        <div key={index} className={`bg-glass-surface rounded-2xl p-4 md:p-6 border ${isOptimized ? 'border-green-500/50' : 'border-white/10'} hover:border-neon-blue/30 transition-all group relative overflow-hidden`}>
+                            {isOptimized && <div className="absolute inset-0 bg-green-500/5 pointer-events-none" />}
+
+                            <div className="flex justify-between items-start mb-4">
+                                <div className={`p-2 rounded-lg ${tip.urgent && !isOptimized ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>
+                                    {tip.urgent && !isOptimized ? <AlertCircle className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
+                                </div>
+                                <span className="text-sm font-bold text-neon-blue bg-neon-blue/10 px-2 py-1 rounded-lg">
+                                    Save {tip.savings}
+                                </span>
                             </div>
-                            <span className="text-sm font-bold text-neon-blue bg-neon-blue/10 px-2 py-1 rounded-lg">
-                                Save {tip.savings}
-                            </span>
+
+                            <h4 className="text-lg font-bold text-white mb-2">{tip.title}</h4>
+                            <p className="text-sm text-gray-400 mb-6">{tip.desc}</p>
+
+                            <button
+                                onClick={() => handleAutomate(tip)}
+                                disabled={isOptimized}
+                                className={`w-full py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 ${isOptimized ? 'bg-green-500 text-black cursor-default' : 'bg-white/5 hover:bg-white/10 text-white'}`}
+                            >
+                                <Clock className="w-4 h-4" />
+                                {isOptimized ? 'Optimized' : 'Automate This'}
+                            </button>
                         </div>
-
-                        <h4 className="text-lg font-bold text-white mb-2">{tip.title}</h4>
-                        <p className="text-sm text-gray-400 mb-6">{tip.desc}</p>
-
-                        <button className="w-full py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white text-sm font-medium transition-colors flex items-center justify-center gap-2">
-                            <Clock className="w-4 h-4" />
-                            Automate This
-                        </button>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
         </div>
     );

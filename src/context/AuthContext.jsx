@@ -23,6 +23,10 @@ export const AuthProvider = ({ children }) => {
                             provider: null,
                             meterId: null,
                             walletBalance: 0,
+                            meterId: null,
+                            walletBalance: 0,
+                            monthlyBudget: 1500,
+                            transactionHistory: [],
                             createdAt: new Date().toISOString()
                         };
                         await saveUserProfile(firebaseUser.uid, profile);
@@ -81,7 +85,12 @@ export const AuthProvider = ({ children }) => {
             email: 'guest@homepulse.app',
             photoURL: null,
             isPremium: false,
+            isPremium: false,
             walletBalance: 1000,
+            monthlyBudget: 1500,
+            transactionHistory: [
+                { id: 1, type: 'Credit', desc: 'Welcome Bonus', amount: 1000, date: new Date().toISOString().split('T')[0], status: 'Success' }
+            ],
             provider: 'BESCOM'
         };
         setUser(guestUser);
@@ -97,16 +106,35 @@ export const AuthProvider = ({ children }) => {
     };
 
     // Update Wallet in Firestore
-    const updateWallet = async (amount) => {
+    const updateWallet = async (amount, description = 'Wallet Top-up') => {
         if (!user) return;
         const newBalance = (user.walletBalance || 0) + amount;
 
+        const newTransaction = {
+            id: Date.now(),
+            type: amount > 0 ? 'Credit' : 'Debit',
+            desc: description,
+            amount: Math.abs(amount),
+            date: new Date().toISOString().split('T')[0],
+            status: 'Success'
+        };
+
+        const updatedHistory = [newTransaction, ...(user.transactionHistory || [])];
+
         // Optimistic UI Update
-        const updatedUser = { ...user, walletBalance: newBalance };
+        const updatedUser = { ...user, walletBalance: newBalance, transactionHistory: updatedHistory };
         setUser(updatedUser);
 
         // Save to Cloud
-        await saveUserProfile(user.uid, { walletBalance: newBalance });
+        await saveUserProfile(user.uid, { walletBalance: newBalance, transactionHistory: updatedHistory });
+    };
+
+    // Update Budget
+    const updateBudget = async (newBudget) => {
+        if (!user) return;
+        const updatedUser = { ...user, monthlyBudget: newBudget };
+        setUser(updatedUser);
+        await saveUserProfile(user.uid, { monthlyBudget: newBudget });
     };
 
     // Upgrade Subscription in Firestore
@@ -136,6 +164,7 @@ export const AuthProvider = ({ children }) => {
         loginGuest,
         logout,
         updateWallet,
+        updateBudget,
         upgradeSubscription,
         updateUserProfile
     };

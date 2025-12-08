@@ -10,15 +10,11 @@ const WalletPage = () => {
 
     const handleTopUp = (e) => {
         e.preventDefault();
-        updateWallet(parseFloat(amount));
+        updateWallet(parseFloat(amount), 'Wallet Top-up');
         setIsTopUpOpen(false);
     };
 
-    const transactions = [
-        { id: 1, type: 'Debit', desc: 'Electricity Bill - Nov', amount: 1450, date: '2025-11-05', status: 'Success' },
-        { id: 2, type: 'Credit', desc: 'Wallet Top-up', amount: 2000, date: '2025-11-04', status: 'Success' },
-        { id: 3, type: 'Debit', desc: 'Auto-Pay: BESCOM', amount: 1320, date: '2025-10-05', status: 'Success' },
-    ];
+    const transactions = user?.transactionHistory || [];
 
     return (
         <div className="animate-fade-in-up space-y-8">
@@ -29,7 +25,7 @@ const WalletPage = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Balance Card */}
-                <div className="md:col-span-2 bg-gradient-to-br from-neon-blue/20 to-purple-600/20 rounded-2xl p-8 border border-white/10 relative overflow-hidden">
+                <div className="md:col-span-2 bg-gradient-to-br from-neon-blue/20 to-purple-600/20 rounded-2xl p-5 md:p-8 border border-white/10 relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-8 opacity-10">
                         <Wallet className="w-40 h-40 transform rotate-12" />
                     </div>
@@ -55,7 +51,7 @@ const WalletPage = () => {
                 </div>
 
                 {/* Quick Actions / Bill Status */}
-                <div className="bg-glass-surface rounded-2xl p-6 border border-white/10 flex flex-col justify-between">
+                <div className="bg-glass-surface rounded-2xl p-4 md:p-6 border border-white/10 flex flex-col justify-between">
                     <div>
                         <h3 className="text-lg font-semibold text-white mb-4">Current Bill</h3>
                         <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl mb-4">
@@ -73,7 +69,7 @@ const WalletPage = () => {
 
             {/* Transaction History */}
             <div className="bg-glass-surface rounded-2xl border border-white/10 overflow-hidden">
-                <div className="p-6 border-b border-white/10 flex justify-between items-center">
+                <div className="p-4 md:p-6 border-b border-white/10 flex justify-between items-center">
                     <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                         <History className="w-5 h-5 text-gray-400" />
                         Transaction History

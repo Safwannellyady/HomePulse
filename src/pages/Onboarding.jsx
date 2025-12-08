@@ -73,7 +73,7 @@ const Onboarding = () => {
                 ))}
             </div>
 
-            <div className="w-full max-w-lg bg-glass-surface border border-white/10 rounded-2xl p-8 backdrop-blur-xl animate-fade-in-up min-h-[400px] flex flex-col">
+            <div className="w-full max-w-lg bg-glass-surface border border-white/10 rounded-2xl p-6 md:p-8 backdrop-blur-xl animate-fade-in-up min-h-[400px] flex flex-col">
 
                 {/* Step 1: Provider Selection */}
                 {currentStep === 1 && (

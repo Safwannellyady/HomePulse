@@ -1,9 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Zap, Activity } from 'lucide-react';
 import { useSimulation } from '../../context/SimulationContext';
+import { useAppliances } from '../../context/ApplianceContext';
 
 const LiveMonitor = () => {
     const { loadOffset } = useSimulation();
+    const { appliances } = useAppliances();
+
+    // Calculate load from active appliances
+    const activeApplianceLoad = appliances
+        .filter(app => app.isOn)
+        .reduce((sum, app) => sum + (app.consumption || 0), 0);
+
     const [metrics, setMetrics] = useState({
         voltage: 230,
         current: 4.5,
@@ -16,13 +24,21 @@ const LiveMonitor = () => {
             // Simulate small fluctuations
             const v = 228 + Math.random() * 5; // 228-233V
 
-            // Base current calculation + Load Offset (converted to Amps roughly, assuming ~230V)
-            // 1kW ~ 4.3A
-            const offsetCurrent = (loadOffset * 1000) / 230;
-            const c = 2 + Math.random() * 8 + offsetCurrent;
+            // Base Load (Always running devices like router, fridge standby) = 0.4 kW
+            // + Active Appliances Load
+            // + Simulation Offset (Load Injection)
+            const totalLoadkW = 0.4 + activeApplianceLoad + (loadOffset || 0);
+
+            // Convert to Current (I = P / (V * PF))
+            // Assume PF ~ 0.92
+            // I = (kW * 1000) / (V * 0.92)
+            const estimatedCurrent = (totalLoadkW * 1000) / (v * 0.92);
+
+            // Add some noise to current readings
+            const c = estimatedCurrent + (Math.random() * 0.2 - 0.1);
 
             const pf = 0.9 + Math.random() * 0.08;
-            const p = (v * c * pf) / 1000; // kW
+            const p = (v * c * pf) / 1000; // Recalculate P based on noisy V and I
 
             setMetrics({
                 voltage: v.toFixed(1),
@@ -33,7 +49,7 @@ const LiveMonitor = () => {
         }, 2000);
 
         return () => clearInterval(interval);
-    }, []);
+    }, [activeApplianceLoad, loadOffset]);
 
     return (
         <div className="bg-glass-surface rounded-2xl p-6 border border-white/10 relative overflow-hidden group">

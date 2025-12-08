@@ -2,10 +2,27 @@ import React, { useState } from 'react';
 import { Wallet, Leaf, TrendingUp, AlertTriangle } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
+import { useAuth } from '../context/AuthContext';
+
 const BudgetAndBills = () => {
-    const [budget, setBudget] = useState(1500);
-    const [currentSpend] = useState(1250);
-    const projectedSpend = 1480;
+    const { user, updateBudget } = useAuth();
+    const [budget, setBudget] = useState(user?.monthlyBudget || 1500);
+
+    // Calculate actual spend from transaction history (Debits this month)
+    const currentSpend = (user?.transactionHistory || [])
+        .filter(t => t.type === 'Debit')
+        .reduce((acc, curr) => acc + curr.amount, 0);
+
+    const projectedSpend = currentSpend * 1.1; // Simple projection
+
+    const handleBudgetChange = (e) => {
+        const val = Number(e.target.value);
+        setBudget(val);
+    };
+
+    const saveBudget = () => {
+        updateBudget(budget);
+    };
 
     const percentage = Math.min((currentSpend / budget) * 100, 100);
     const co2 = (currentSpend * 0.82).toFixed(1); // Mock conversion factor
@@ -43,7 +60,8 @@ const BudgetAndBills = () => {
                         <input
                             type="number"
                             value={budget}
-                            onChange={(e) => setBudget(Number(e.target.value))}
+                            onChange={handleBudgetChange}
+                            onBlur={saveBudget}
                             className="w-full bg-transparent border border-white/20 rounded-xl px-4 py-3 text-2xl font-bold text-white focus:border-neon-blue outline-none transition-colors"
                         />
                     </div>
