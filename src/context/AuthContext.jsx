@@ -85,7 +85,6 @@ export const AuthProvider = ({ children }) => {
             email: 'guest@homepulse.app',
             photoURL: null,
             isPremium: false,
-            isPremium: false,
             walletBalance: 1000,
             monthlyBudget: 1500,
             transactionHistory: [
@@ -138,13 +137,17 @@ export const AuthProvider = ({ children }) => {
     };
 
     // Upgrade Subscription in Firestore
-    const upgradeSubscription = async () => {
+    const upgradeSubscription = async (months = 1) => {
         if (!user) return;
 
-        const updatedUser = { ...user, isPremium: true };
+        const expiryDate = new Date();
+        expiryDate.setMonth(expiryDate.getMonth() + months);
+        const isoExpiry = expiryDate.toISOString();
+
+        const updatedUser = { ...user, isPremium: true, subscriptionExpiry: isoExpiry };
         setUser(updatedUser);
 
-        await saveUserProfile(user.uid, { isPremium: true });
+        await saveUserProfile(user.uid, { isPremium: true, subscriptionExpiry: isoExpiry });
     };
 
     // Save Onboarding Data in Firestore
