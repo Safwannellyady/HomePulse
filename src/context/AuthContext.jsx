@@ -68,12 +68,22 @@ export const AuthProvider = ({ children }) => {
             return { success: true };
         } catch (error) {
             console.error("Google Sign In Error", error);
-            let message = error.message;
+            let message = "Failed to sign in via Google.";
+
             if (error.code === 'auth/popup-blocked') {
-                message = "Pop-up blocked by browser. Please allow pop-ups for this site.";
+                message = "Pop-up blocked. Please allow pop-ups for this site.";
             } else if (error.code === 'auth/popup-closed-by-user') {
                 message = "Sign-in cancelled.";
+            } else if (error.code === 'auth/network-request-failed') {
+                message = "Network error. Check your connection.";
+            } else if (error.code === 'auth/account-exists-with-different-credential') {
+                message = "Account exists with a different provider.";
+            } else if (error.code === 'auth/operation-not-allowed') {
+                message = "Google Sign-In is not enabled in Firebase Console.";
+            } else if (error.message) {
+                message = error.message;
             }
+
             return { success: false, error: message };
         }
     };
