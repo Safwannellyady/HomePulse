@@ -3,6 +3,7 @@ import { Home, Zap, Clock, Wallet, BarChart3, Settings, LogOut, Star } from 'luc
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import Logo from '../common/Logo';
 
 const Sidebar = () => {
     const location = useLocation();
@@ -23,12 +24,7 @@ const Sidebar = () => {
         <div className="h-[100dvh] w-20 lg:w-64 bg-black/40 backdrop-blur-xl border-r border-white/10 flex flex-col fixed left-0 top-0 transition-all duration-300 z-50">
             {/* Logo Area */}
             <div className="h-20 flex items-center justify-center lg:justify-start lg:px-6 border-b border-white/5">
-                <div className="w-10 h-10 bg-gradient-to-br from-neon-blue to-neon-purple rounded-xl flex items-center justify-center shadow-lg shadow-neon-blue/20">
-                    <Zap className="text-white w-6 h-6 fill-current" />
-                </div>
-                <span className="hidden lg:block ml-3 font-bold text-xl text-white tracking-wide">
-                    Home<span className="text-neon-blue">Pulse</span>
-                </span>
+                <Logo />
             </div>
 
             {/* Menu Items */}

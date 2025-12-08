@@ -3,6 +3,7 @@ import LiveMonitor from '../components/dashboard/LiveMonitor';
 import CostEstimator from '../components/dashboard/CostEstimator';
 import BudgetStatus from '../components/dashboard/BudgetStatus';
 import ConsumptionGraph from '../components/dashboard/ConsumptionGraph';
+import EnergyBreakdown from '../components/dashboard/EnergyBreakdown';
 
 const Dashboard = () => {
     return (
@@ -11,8 +12,11 @@ const Dashboard = () => {
             <CostEstimator />
             <BudgetStatus />
 
-            <div className="lg:col-span-3 h-96">
+            <div className="lg:col-span-2 h-96">
                 <ConsumptionGraph />
+            </div>
+            <div className="lg:col-span-1 h-96">
+                <EnergyBreakdown />
             </div>
         </div>
     );
