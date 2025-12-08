@@ -12,21 +12,24 @@ export const saveUserProfile = async (uid, data) => {
     await setDoc(doc(db, 'users', uid), data, { merge: true });
 };
 
-// Bill Integration (Mocking real utility API by storing/fetching from Firestore)
-export const fetchBill = async (provider, consumerId) => {
-    // In a real app, this would call an Edge Function or Utility API.
-    // Here we simulate it or check if we have a "mock bill" stored.
+// IoT Device Integration
+export const verifyIoTConnection = async (iotKey) => {
+    // Simulate finding the device on the cloud
+    await new Promise(r => setTimeout(r, 1200));
 
-    // Simulate API delay
-    await new Promise(r => setTimeout(r, 1500));
+    // Validation: Check if key format is valid (e.g., must be > 6 chars)
+    if (!iotKey || iotKey.length < 6) {
+        return { success: false };
+    }
 
-    // Return mock data for demo purposes, but this function signature is ready for real API
+    // Return mock initial data on success
     return {
-        amount: Math.floor(Math.random() * 2000) + 500, // Random amount 500-2500
-        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 7 days from now
-        status: 'Unpaid',
-        provider,
-        consumerId
+        success: true,
+        lastBill: {
+            amount: 0, // Reset for new device
+            dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            status: 'Synched',
+        }
     };
 };
 
