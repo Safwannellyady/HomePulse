@@ -17,45 +17,51 @@ const getIcon = (type) => {
     }
 };
 
-const initialAppliances = [
-    { id: 1, name: 'Air Conditioner', location: 'Living Room', type: 'AC', consumption: 1.5, isOn: true },
-    { id: 2, name: 'Smart TV', location: 'Bedroom', type: 'TV', consumption: 0.2, isOn: false },
-    { id: 3, name: 'Geyser', location: 'Bathroom 1', type: 'Geyser', consumption: 2.0, isOn: false },
-    { id: 4, name: 'Refrigerator', location: 'Kitchen', type: 'Fridge', consumption: 0.15, isOn: true },
-];
+const [appliances, setAppliances] = useState([]);
 
-export const ApplianceProvider = ({ children }) => {
-    const [appliances, setAppliances] = useState(() => {
-        const saved = localStorage.getItem('homepulse_appliances');
-        return saved ? JSON.parse(saved) : initialAppliances;
-    });
+useEffect(() => {
+    fetch('/api/appliances')
+        .then(res => res.json())
+        .then(data => setAppliances(data))
+        .catch(err => console.error(err));
+}, []);
 
-    useEffect(() => {
-        localStorage.setItem('homepulse_appliances', JSON.stringify(appliances));
-    }, [appliances]);
+const addAppliance = (newAppliance) => {
+    // Mock add for now (backend didn't implement POST /appliances yet)
+    const item = { ...newAppliance, id: Date.now(), isOn: false };
+    setAppliances([...appliances, item]);
+};
 
-    const addAppliance = (newAppliance) => {
-        const item = { ...newAppliance, id: Date.now(), isOn: false };
-        setAppliances([...appliances, item]);
-    };
+const removeAppliance = (id) => {
+    setAppliances(appliances.filter(a => a.id !== id));
+};
 
-    const removeAppliance = (id) => {
-        setAppliances(appliances.filter(a => a.id !== id));
-    };
+const toggleAppliance = async (id, state) => {
+    // Optimistic update
+    setAppliances(appliances.map(a => a.id === id ? { ...a, isOn: state } : a));
 
-    const toggleAppliance = (id, state) => {
-        setAppliances(appliances.map(a => a.id === id ? { ...a, isOn: state } : a));
-    };
+    try {
+        await fetch(`/api/appliances/${id}/toggle`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ state })
+        });
+    } catch (err) {
+        console.error("Failed to toggle appliance", err);
+        // Revert on failure
+        setAppliances(appliances.map(a => a.id === id ? { ...a, isOn: !state } : a));
+    }
+};
 
-    // Enrich stored data with icons (since React components don't store in JSON)
-    const appliancesWithIcons = appliances.map(a => ({
-        ...a,
-        icon: getIcon(a.type)
-    }));
+// Enrich stored data with icons (since React components don't store in JSON)
+const appliancesWithIcons = appliances.map(a => ({
+    ...a,
+    icon: getIcon(a.type)
+}));
 
-    return (
-        <ApplianceContext.Provider value={{ appliances: appliancesWithIcons, addAppliance, removeAppliance, toggleAppliance }}>
-            {children}
-        </ApplianceContext.Provider>
-    );
+return (
+    <ApplianceContext.Provider value={{ appliances: appliancesWithIcons, addAppliance, removeAppliance, toggleAppliance }}>
+        {children}
+    </ApplianceContext.Provider>
+);
 };

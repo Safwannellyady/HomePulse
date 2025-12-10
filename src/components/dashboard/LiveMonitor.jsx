@@ -20,36 +20,32 @@ const LiveMonitor = () => {
     });
 
     useEffect(() => {
-        const interval = setInterval(() => {
-            // Simulate small fluctuations
-            const v = 228 + Math.random() * 5; // 228-233V
+        const fetchMetrics = async () => {
+            // In a real app, we might merge activeApplianceLoad here if the backend doesn't know about it.
+            // But for this sim, let's assume the backend simulator handles the "total" load.
+            try {
+                const res = await fetch('/api/meter/current');
+                const data = await res.json();
 
-            // Base Load (Always running devices like router, fridge standby) = 0.4 kW
-            // + Active Appliances Load
-            // + Simulation Offset (Load Injection)
-            const totalLoadkW = 0.4 + activeApplianceLoad + (loadOffset || 0);
+                if (res.ok) {
+                    setMetrics({
+                        voltage: data.voltage,
+                        current: data.current,
+                        power: data.power,
+                        pf: 0.95 // Mock PF as simulator doesn't send it yet
+                    });
+                }
+            } catch (err) {
+                console.error("Failed to fetch meter data", err);
+            }
+        };
 
-            // Convert to Current (I = P / (V * PF))
-            // Assume PF ~ 0.92
-            // I = (kW * 1000) / (V * 0.92)
-            const estimatedCurrent = (totalLoadkW * 1000) / (v * 0.92);
-
-            // Add some noise to current readings
-            const c = estimatedCurrent + (Math.random() * 0.2 - 0.1);
-
-            const pf = 0.9 + Math.random() * 0.08;
-            const p = (v * c * pf) / 1000; // Recalculate P based on noisy V and I
-
-            setMetrics({
-                voltage: v.toFixed(1),
-                current: c.toFixed(2),
-                power: p.toFixed(3),
-                pf: pf.toFixed(2),
-            });
-        }, 2000);
+        // Initial fetch
+        fetchMetrics();
+        const interval = setInterval(fetchMetrics, 2000);
 
         return () => clearInterval(interval);
-    }, [activeApplianceLoad, loadOffset]);
+    }, []);
 
     return (
         <div className="bg-glass-surface rounded-2xl p-6 border border-white/10 relative overflow-hidden group">

@@ -21,10 +21,8 @@ export const AuthProvider = ({ children }) => {
                         profile = {
                             isPremium: false,
                             provider: null,
-                            meterId: null,
                             walletBalance: 0,
-                            meterId: null,
-                            walletBalance: 0,
+
                             monthlyBudget: 1500,
                             transactionHistory: [],
                             createdAt: new Date().toISOString()
@@ -134,6 +132,12 @@ export const AuthProvider = ({ children }) => {
         const updatedUser = { ...user, walletBalance: newBalance, transactionHistory: updatedHistory };
         setUser(updatedUser);
 
+        // Guest Handling: Local Persistence Only
+        if (user.uid.startsWith('guest-')) {
+            localStorage.setItem('homepulse_user_guest', JSON.stringify(updatedUser));
+            return;
+        }
+
         // Save to Cloud
         await saveUserProfile(user.uid, { walletBalance: newBalance, transactionHistory: updatedHistory });
     };
@@ -143,6 +147,13 @@ export const AuthProvider = ({ children }) => {
         if (!user) return;
         const updatedUser = { ...user, monthlyBudget: newBudget };
         setUser(updatedUser);
+
+        // Guest Handling: Local Persistence Only
+        if (user.uid.startsWith('guest-')) {
+            localStorage.setItem('homepulse_user_guest', JSON.stringify(updatedUser));
+            return;
+        }
+
         await saveUserProfile(user.uid, { monthlyBudget: newBudget });
     };
 
@@ -156,6 +167,12 @@ export const AuthProvider = ({ children }) => {
 
         const updatedUser = { ...user, isPremium: true, subscriptionExpiry: isoExpiry };
         setUser(updatedUser);
+
+        // Guest Handling: Local Persistence Only
+        if (user.uid.startsWith('guest-')) {
+            localStorage.setItem('homepulse_user_guest', JSON.stringify(updatedUser));
+            return;
+        }
 
         await saveUserProfile(user.uid, { isPremium: true, subscriptionExpiry: isoExpiry });
     };
