@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceArea } from 'recharts';
 import { AlertCircle, TrendingDown, Clock } from 'lucide-react';
 import { useSimulation } from '../context/SimulationContext';
+import { useAppliances } from '../context/ApplianceContext';
+import { useToast } from '../context/ToastContext';
 
 const tariffData = [
     { hour: '00', rate: 4.5, type: 'Off-Peak' },
@@ -14,12 +16,7 @@ const tariffData = [
     { hour: '24', rate: 4.5, type: 'Off-Peak' },
 ];
 
-import { useAppliances } from '../context/ApplianceContext';
-import { useToast } from '../context/ToastContext';
-
-// ... (tariffData remains same) ...
-
-const dataTips = [
+const fallbackTips = [
     { id: 'wash', title: 'Shift Washing Machine', savings: '₹120/mo', desc: 'Running it at 10 PM instead of 7 PM saves 40% on tariff.', urgent: true, type: 'Washing Machine' },
     { id: 'geyser', title: 'Geyser Optimization', savings: '₹85/mo', desc: 'Auto-schedule geyser to turn off at 9 AM (Peak start).', urgent: false, type: 'Geyser' },
     { id: 'ac', title: 'AC Temperature', savings: '₹300/mo', desc: 'Setting AC to 24°C instead of 20°C reduces load by 15%.', urgent: false, type: 'AC' },
@@ -29,15 +26,41 @@ const ToDOptimizer = () => {
     const { virtualTime } = useSimulation();
     const { appliances } = useAppliances();
     const { showToast } = useToast();
-    const [optimizedIds, setOptimizedIds] = React.useState([]);
+    const [optimizedIds, setOptimizedIds] = useState([]);
+    const [recommendations, setRecommendations] = useState([]);
+
+    useEffect(() => {
+        const fetchInsights = async () => {
+            try {
+                const res = await fetch('/api/insights/tod');
+                const data = await res.json();
+                if (data.recommendations) {
+                    const mapped = data.recommendations.map((rec, i) => ({
+                        id: 'rec-' + i,
+                        title: rec.action,
+                        savings: rec.impact,
+                        desc: rec.message,
+                        urgent: true,
+                        type: 'General'
+                    }));
+                    setRecommendations(mapped);
+                }
+            } catch (err) {
+                console.error("Failed to fetch insights", err);
+            }
+        };
+        fetchInsights();
+        const interval = setInterval(fetchInsights, 5000);
+        return () => clearInterval(interval);
+    }, []);
 
     const handleAutomate = (tip) => {
         if (optimizedIds.includes(tip.id)) return;
 
-        // Check if appliance exists
+        // Check availability
         const exists = appliances.some(a => a.type === tip.type || a.name.includes(tip.type));
 
-        if (exists || tip.type === 'Washing Machine') { // Allow washing machine simulation even if not in list
+        if (exists || tip.type === 'General' || tip.type === 'Washing Machine') {
             setOptimizedIds(prev => [...prev, tip.id]);
             showToast(`${tip.title} applied! Savings started.`, "success");
         } else {
@@ -45,9 +68,10 @@ const ToDOptimizer = () => {
         }
     };
 
+    const displayTips = recommendations.length > 0 ? recommendations : fallbackTips;
+
     return (
         <div className="animate-fade-in-up space-y-8">
-            {/* ... Header and Chart remain same ... */}
             <div>
                 <h2 className="text-2xl font-bold text-white mb-2">Time-of-Day Optimization</h2>
                 <p className="text-gray-400">Shift your usage to off-peak hours and save up to 15% on bills.</p>
@@ -55,7 +79,6 @@ const ToDOptimizer = () => {
 
             {/* Tariff Chart */}
             <div className="bg-glass-surface rounded-2xl p-4 md:p-6 border border-white/10">
-                {/* ... Chart Content (Keep exactly as before) ... */}
                 <div className="flex items-center justify-between mb-6">
                     <h3 className="text-lg font-semibold text-white">Tariff Rates (₹/kWh)</h3>
                     <div className="flex gap-4 text-xs">
@@ -80,7 +103,6 @@ const ToDOptimizer = () => {
                                 contentStyle={{ backgroundColor: '#0a0a0a', border: '1px solid rgba(255,255,255,0.1)' }}
                             />
                             <Area type="stepAfter" dataKey="rate" stroke="#bc13fe" strokeWidth={2} fillOpacity={1} fill="url(#colorRate)" />
-                            {/* Current Time Indicator */}
                             <ReferenceArea x1={virtualTime.getHours().toString().padStart(2, '0')} x2={virtualTime.getHours().toString().padStart(2, '0')} stroke="red" strokeOpacity={0.5} />
                         </AreaChart>
                     </ResponsiveContainer>
@@ -92,7 +114,7 @@ const ToDOptimizer = () => {
 
             {/* Suggestions */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {dataTips.map((tip, index) => {
+                {displayTips.map((tip, index) => {
                     const isOptimized = optimizedIds.includes(tip.id);
                     return (
                         <div key={index} className={`bg-glass-surface rounded-2xl p-4 md:p-6 border ${isOptimized ? 'border-green-500/50' : 'border-white/10'} hover:border-neon-blue/30 transition-all group relative overflow-hidden`}>
