@@ -2,7 +2,10 @@ import { iotSimulator } from '../utils/iotSimulator.js';
 
 export const getCurrentReading = (req, res) => {
     const reading = iotSimulator.getLatest();
-    res.json(reading);
+    res.json({
+        ...reading,
+        daily: iotSimulator.getDailyStats()
+    });
 };
 
 export const getHistory = (req, res) => {

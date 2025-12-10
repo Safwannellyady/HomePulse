@@ -11,18 +11,30 @@ const CostEstimator = () => {
     });
 
     useEffect(() => {
-        const hour = virtualTime.getHours();
-        let baseRate = 8.5;
+        const fetchStats = async () => {
+            const hour = virtualTime.getHours();
+            let baseRate = 8.5;
 
-        // Simple Tariff Logic
-        if (hour >= 18 && hour <= 22) baseRate = 12.0; // Peak
-        else if (hour >= 22 || hour <= 6) baseRate = 6.0; // Off-Peak
-        else baseRate = 8.5; // Normal
+            if (hour >= 18 && hour <= 22) baseRate = 12.0;
+            else if (hour >= 22 || hour <= 6) baseRate = 6.0;
 
-        setCost(prev => ({
-            ...prev,
-            hourly: baseRate.toFixed(2)
-        }));
+            try {
+                const res = await fetch('/api/meter/current');
+                const data = await res.json();
+                if (data.daily) {
+                    setCost({
+                        hourly: baseRate.toFixed(2),
+                        daily: data.daily.cost.toFixed(2),
+                        projected: (data.daily.cost * 30).toFixed(0) // Simple projection
+                    });
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
+        const interval = setInterval(fetchStats, 2000);
+        return () => clearInterval(interval);
     }, [virtualTime]);
 
     return (

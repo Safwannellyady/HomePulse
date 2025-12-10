@@ -8,7 +8,10 @@ const EnergyBreakdown = () => {
     // Group by type and sum consumption
     const groupedData = appliances.reduce((acc, app) => {
         const type = app.type;
-        acc[type] = (acc[type] || 0) + app.consumption;
+        // Use power (Watts) and convert to kW for display, or just relative value
+        // Backend provides 'power' (Watts), initial state had 'consumption' (kW)
+        const val = app.power ? app.power / 1000 : (app.consumption || 0);
+        acc[type] = (acc[type] || 0) + val;
         return acc;
     }, {});
 

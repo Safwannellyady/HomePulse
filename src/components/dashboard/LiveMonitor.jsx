@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Zap, Activity } from 'lucide-react';
 import { useSimulation } from '../../context/SimulationContext';
 import { useAppliances } from '../../context/ApplianceContext';
+import RealtimeGauge from './RealtimeGauge';
 
 const LiveMonitor = () => {
     const { loadOffset } = useSimulation();
@@ -64,10 +65,7 @@ const LiveMonitor = () => {
             </div>
 
             <div className="flex flex-col items-center justify-center mb-8">
-                <div className="text-5xl font-bold text-white tracking-tighter tabular-nums text-shadow-neon-blue">
-                    {metrics.power}
-                    <span className="text-2xl text-gray-400 ml-2 font-medium">kW</span>
-                </div>
+                <RealtimeGauge value={metrics.power} max={10} unit="kW" />
                 <p className="text-sm text-gray-400 mt-1">Current Load</p>
             </div>
 

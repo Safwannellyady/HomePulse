@@ -3,6 +3,12 @@ import { APPLIANCES } from '../config/appliances.js';
 
 let applianceState = APPLIANCES.map(app => ({ ...app, isOn: false }));
 
+let dailyStats = {
+    consumption: 0, // kWh
+    cost: 0, // INR
+    lastReset: new Date()
+};
+
 let latestReading = {
     voltage: 220,
     current: 0,
@@ -13,6 +19,13 @@ let latestReading = {
 let historyBuffer = [];
 
 const SIMULATION_INTERVAL_MS = 2000; // 2 seconds
+
+// Tariff Rates (Mock)
+const RATES = {
+    'Peak': 12.0,
+    'Normal': 8.5,
+    'Off-Peak': 6.0
+};
 
 const getTariffForTime = (date) => {
     const hour = date.getHours();
@@ -50,6 +63,21 @@ const generateReading = () => {
     const current = baseCurrent + applianceCurrent + (Math.random() * 0.5);
     const power = (voltage * current) / 1000; // kW
 
+    // Accumulate Stats
+    // Energy (kWh) = Power (kW) * Time (h)
+    // Time = 2 seconds = 2/3600 hours
+    const energy = power * (SIMULATION_INTERVAL_MS / 3600000);
+    const rate = RATES[tariffType];
+    const cost = energy * rate;
+
+    // Reset daily stats if it's a new day (mock logic)
+    if (now.getDate() !== dailyStats.lastReset.getDate()) {
+        dailyStats = { consumption: 0, cost: 0, lastReset: now };
+    }
+
+    dailyStats.consumption += energy;
+    dailyStats.cost += cost;
+
     const reading = {
         timestamp: now.toISOString(),
         voltage: parseFloat(voltage.toFixed(1)),
@@ -78,6 +106,7 @@ export const iotSimulator = {
     getLatest: () => latestReading,
     getHistory: () => historyBuffer,
     getAppliances: () => applianceState,
+    getDailyStats: () => dailyStats,
     toggleAppliance: (id) => {
         const app = applianceState.find(a => a.id === id);
         if (app) {
