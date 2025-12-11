@@ -17,29 +17,40 @@ const getIcon = (type) => {
     }
 };
 
+const normalizeAppliance = (appliance) => ({
+    ...appliance,
+    // Prefer explicit consumption in kWh, fallback to power (Watts) -> kW
+    consumption: typeof appliance.consumption === 'number'
+        ? appliance.consumption
+        : appliance.power
+            ? appliance.power / 1000
+            : 0,
+    isOn: Boolean(appliance.isOn)
+});
+
 export const ApplianceProvider = ({ children }) => {
     const [appliances, setAppliances] = useState([]);
 
     useEffect(() => {
         fetch('/api/appliances')
             .then(res => res.json())
-            .then(data => setAppliances(data))
+            .then(data => setAppliances(data.map(normalizeAppliance)))
             .catch(err => console.error(err));
     }, []);
 
     const addAppliance = (newAppliance) => {
         // Mock add for now (backend didn't implement POST /appliances yet)
-        const item = { ...newAppliance, id: Date.now(), isOn: false };
-        setAppliances([...appliances, item]);
+        const item = normalizeAppliance({ ...newAppliance, id: Date.now(), isOn: false });
+        setAppliances(prev => [...prev, item]);
     };
 
     const removeAppliance = (id) => {
-        setAppliances(appliances.filter(a => a.id !== id));
+        setAppliances(prev => prev.filter(a => a.id !== id));
     };
 
     const toggleAppliance = async (id, state) => {
         // Optimistic update
-        setAppliances(appliances.map(a => a.id === id ? { ...a, isOn: state } : a));
+        setAppliances(prev => prev.map(a => a.id === id ? { ...a, isOn: state } : a));
 
         try {
             await fetch(`/api/appliances/${id}/toggle`, {
@@ -50,7 +61,7 @@ export const ApplianceProvider = ({ children }) => {
         } catch (err) {
             console.error("Failed to toggle appliance", err);
             // Revert on failure
-            setAppliances(appliances.map(a => a.id === id ? { ...a, isOn: !state } : a));
+            setAppliances(prev => prev.map(a => a.id === id ? { ...a, isOn: !state } : a));
         }
     };
 

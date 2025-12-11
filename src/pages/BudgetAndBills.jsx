@@ -55,15 +55,18 @@ const BudgetAndBills = () => {
                         </div>
                     </div>
 
-                    <div className="mb-6 relative">
-                        <label className="text-xs text-gray-500 uppercase tracking-widest absolute -top-2 left-3 bg-[#0a0a0a] px-1">Amount (₹)</label>
-                        <input
-                            type="number"
-                            value={budget}
-                            onChange={handleBudgetChange}
-                            onBlur={saveBudget}
-                            className="w-full bg-transparent border border-white/20 rounded-xl px-4 py-3 text-2xl font-bold text-white focus:border-neon-blue outline-none transition-colors"
-                        />
+                    <div className="mb-6">
+                        <label className="text-xs text-gray-400 uppercase tracking-widest block mb-2 font-medium">Monthly Limit (₹)</label>
+                        <div className="relative">
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-xl font-light">₹</span>
+                            <input
+                                type="number"
+                                value={budget}
+                                onChange={handleBudgetChange}
+                                onBlur={saveBudget}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl pl-8 pr-4 py-3 text-2xl font-bold text-white focus:border-neon-blue outline-none transition-all focus:bg-white/10"
+                            />
+                        </div>
                     </div>
 
                     <div className="space-y-4">
@@ -140,21 +143,47 @@ const BudgetAndBills = () => {
                         </PieChart>
                     </ResponsiveContainer>
                 </div>
-                <div className="w-full md:w-1/2 md:pl-6 md:border-l border-white/5 space-y-4">
-                    <h4 className="text-white font-medium mb-4">Budget Analysis</h4>
-                    <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full" style={{ background: COLORS[0] }}></div>
-                        <span className="text-gray-400 text-sm">Spent (₹{currentSpend})</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full" style={{ background: COLORS[1] }}></div>
-                        <span className="text-gray-400 text-sm">Remaining (₹{budget - currentSpend})</span>
+                <div className="w-full md:w-1/2 md:pl-6 md:border-l border-white/5 space-y-6">
+                    <div>
+                        <h4 className="text-white font-medium mb-4 flex items-center gap-2">
+                            Analysis
+                            <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 text-[10px] uppercase tracking-wider">Live</span>
+                        </h4>
+
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 rounded-full" style={{ background: COLORS[0] }}></div>
+                                    <span className="text-gray-300 text-sm">Spent</span>
+                                </div>
+                                <span className="text-white font-mono">₹{currentSpend.toLocaleString()}</span>
+                            </div>
+
+                            <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 rounded-full" style={{ background: COLORS[1] }}></div>
+                                    <span className="text-gray-300 text-sm">Remaining</span>
+                                </div>
+                                <span className="text-white font-mono">₹{(budget - currentSpend).toLocaleString()}</span>
+                            </div>
+                        </div>
                     </div>
 
-                    {projectedSpend > budget && (
-                        <div className="mt-4 flex items-center gap-2 text-red-400 text-xs bg-red-500/10 p-2 rounded-lg">
-                            <AlertTriangle className="w-4 h-4" />
-                            <span>Projected to exceed budget by ₹{(projectedSpend - budget)}</span>
+                    {projectedSpend > budget ? (
+                        <div className="flex items-start gap-3 text-red-300 text-sm bg-red-500/10 p-4 rounded-xl border border-red-500/20">
+                            <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                            <div>
+                                <p className="font-semibold text-red-200">Budget Warning</p>
+                                <p className="text-xs opacity-80 mt-1">Projected to exceed by ₹{(projectedSpend - budget).toFixed(0)} based on current trend.</p>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="flex items-start gap-3 text-green-300 text-sm bg-green-500/10 p-4 rounded-xl border border-green-500/20">
+                            <TrendingUp className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                            <div>
+                                <p className="font-semibold text-green-200">On Track</p>
+                                <p className="text-xs opacity-80 mt-1">You are well within your monthly budget limits.</p>
+                            </div>
                         </div>
                     )}
                 </div>

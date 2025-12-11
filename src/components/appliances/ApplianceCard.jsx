@@ -7,6 +7,11 @@ import ScheduleModal from './ScheduleModal';
 const ApplianceCard = ({ appliance, onToggle }) => {
     const [isOn, setIsOn] = useState(appliance.isOn);
     const [showSchedule, setShowSchedule] = useState(false);
+    const consumptionValue = typeof appliance.consumption === 'number'
+        ? appliance.consumption
+        : appliance.power
+            ? appliance.power / 1000
+            : 0;
 
     const handleToggle = () => {
         setIsOn(!isOn);
@@ -42,7 +47,7 @@ const ApplianceCard = ({ appliance, onToggle }) => {
                 <div className="flex items-center justify-between">
                     <div className="text-xs text-gray-500">
                         <p className="mb-0.5">Consumption</p>
-                        <p className="text-white font-medium">{isOn ? appliance.consumption : '0'} kWh</p>
+                        <p className="text-white font-medium">{isOn ? consumptionValue : '0'} kWh</p>
                     </div>
 
                     <button

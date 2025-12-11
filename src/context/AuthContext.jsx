@@ -1,6 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { auth, googleProvider } from '../firebase';
-import { signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
+import {
+    signInWithPopup,
+    signInWithRedirect,
+    getRedirectResult,
+    signOut,
+    onAuthStateChanged
+} from 'firebase/auth';
 import { getUserProfile, saveUserProfile } from '../services/db';
 
 const AuthContext = createContext();
@@ -12,6 +18,11 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        // Handle redirect-based sign-in results (fallback for popup issues)
+        getRedirectResult(auth).catch((error) => {
+            console.error("Google Redirect Sign In Error", error);
+        });
+
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             if (firebaseUser) {
                 // Fetch Profile from Firestore
@@ -66,11 +77,23 @@ export const AuthProvider = ({ children }) => {
             return { success: true };
         } catch (error) {
             console.error("Google Sign In Error", error);
-            let message = "Failed to sign in via Google.";
 
-            if (error.code === 'auth/popup-blocked') {
-                message = "Pop-up blocked. Please allow pop-ups for this site.";
-            } else if (error.code === 'auth/popup-closed-by-user') {
+            // Fallback to redirect when popups are blocked or unsupported
+            if (['auth/popup-blocked', 'auth/operation-not-supported-in-this-environment'].includes(error.code)) {
+                try {
+                    await signInWithRedirect(auth, googleProvider);
+                    return { success: true, viaRedirect: true };
+                } catch (redirectError) {
+                    console.error("Google Redirect Sign In Error", redirectError);
+                    return {
+                        success: false,
+                        error: redirectError.message || "Redirect sign-in failed."
+                    };
+                }
+            }
+
+            let message = "Failed to sign in via Google.";
+            if (error.code === 'auth/popup-closed-by-user') {
                 message = "Sign-in cancelled.";
             } else if (error.code === 'auth/network-request-failed') {
                 message = "Network error. Check your connection.";
